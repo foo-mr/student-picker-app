@@ -73,14 +73,14 @@
 
     <!-- Main Application Container -->
     <div id="appContainer" class="w-full max-w-xl bg-white p-6 md:p-8 rounded-xl shadow-2xl border border-gray-200">
-        <h1 class="4xl font-extrabold text-blue-600 text-center mb-6">
+        <h1 class="6xl font-extrabold text-blue-600 text-center mb-6">
             ✨ 幸运抽奖系统
         </h1>
 
         <!-- -------------------- HOME VIEW (Input Page) -------------------- -->
         <div id="homeView" class="flex flex-col">
             <div class="space-y-4 mb-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h2 class="text-2xl font-semibold text-blue-800">名单</h2>
+                <h2 class="text-3xl font-semibold text-blue-800">汇入名单</h2>
                 
                 <!-- Container for dynamic tags -->
                 <div id="tagContainer" class="flex flex-wrap gap-2 p-2 min-h-[40px] border border-gray-300 rounded-lg bg-white">
@@ -210,18 +210,29 @@
             }
 
             function updateTagDisplay() {
-                tagContainer.innerHTML = '';
-                currentStudentList.forEach((name, index) => {
-                    const tag = document.createElement('div');
-                    tag.classList.add('name-tag');
-                    tag.dataset.name = name;
-                    
-                    tag.innerHTML = `
-                        <span>${name}</span>
-                        <span class="name-tag-remove" data-index="${index}">&times;</span>
+                tagContainer.innerHTML = ''; // Clear existing content
+                
+                if (currentStudentList.length === 0) {
+                    // Inject the empty list message with centering classes (w-full and text-center)
+                    tagContainer.innerHTML = `
+                        <p class="text-gray-500 italic text-center w-full p-1">
+                            目前名单是空的，请新增.
+                        </p>
                     `;
-                    tagContainer.appendChild(tag);
-                });
+                } else {
+                    currentStudentList.forEach((name, index) => {
+                        const tag = document.createElement('div');
+                        tag.classList.add('name-tag');
+                        tag.dataset.name = name;
+                        
+                        tag.innerHTML = `
+                            <span>${name}</span>
+                            <span class="name-tag-remove" data-index="${index}">&times;</span>
+                        `;
+                        tagContainer.appendChild(tag);
+                    });
+                }
+                
                 updateButtonState();
             }
 
