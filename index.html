@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Student Picker</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Confetti Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.0/dist/confetti.browser.js"></script>
+    <style>
+        /* Custom CSS for Animations */
+
+        /* Final Result Card Styling - uses the 'chosen-card' class */
+        .card {
+            background-color: #93c5fd; /* Default Blue-300 */
+            color: #1e3a8a; /* Default Blue-900 */
+            padding: 25px 50px;
+            border-radius: 10px;
+            font-size: 2.5em;
+            font-weight: bold;
+            min-width: 280px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: auto;
+            transition: all 0.5s ease; 
+        }
+        
+        #resultCard.chosen-card {
+            background-color: #2563eb; /* Final Blue-600 */
+            color: white;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            opacity: 0; /* Start hidden for reveal */
+            animation: reveal-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes reveal-pop {
+            0% { transform: scale(0.7); opacity: 0; }
+            100% { transform: scale(1.0); opacity: 1; }
+        }
+        
+        /* Custom styling for the participant tags */
+        .name-tag {
+            display: flex;
+            align-items: center;
+            background-color: #dbeafe; /* Blue-100 */
+            color: #1e40af; /* Blue-800 */
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: 600;
+            user-select: none;
+            cursor: default;
+            transition: background-color 0.2s;
+        }
+        .name-tag-remove {
+            margin-left: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            line-height: 1;
+            color: #9333ea; /* Purple-600 */
+            transition: color 0.2s;
+        }
+        .name-tag-remove:hover {
+            color: #7e22ce; /* Purple-700 */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
+
+    <!-- Main Application Container -->
+    <div id="appContainer" class="w-full max-w-xl bg-white p-6 md:p-8 rounded-xl shadow-2xl border border-gray-200">
+        <h1 class="4xl font-extrabold text-blue-600 text-center mb-6">
+            ✨ Student Selector
+        </h1>
+
+        <!-- -------------------- HOME VIEW (Input Page) -------------------- -->
+        <div id="homeView" class="flex flex-col">
+            <div class="space-y-4 mb-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h2 class="text-2xl font-semibold text-blue-800">1. List of Participants</h2>
+                
+                <!-- Container for dynamic tags -->
+                <div id="tagContainer" class="flex flex-wrap gap-2 p-2 min-h-[40px] border border-gray-300 rounded-lg bg-white">
+                    <!-- Name tags will be injected here -->
+                </div>
+
+                <!-- Input field for adding names -->
+                <input type="text" id="nameInputBox" 
+                       class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-base" 
+                       placeholder="Type names and press Enter, or paste a list...">
+                       
+                <!-- Clear Button Container -->
+                <div class="flex justify-end">
+                    <button id="clearAllButton" class="text-sm px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300 shadow-md">
+                        Clear All Participants
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Pick Button -->
+            <div class="text-center mb-4">
+                <button id="pickButton" disabled 
+                        class="bg-yellow-400 text-gray-800 font-extrabold py-4 px-10 text-2xl rounded-full transition duration-300 transform hover:scale-105 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
+                    Pick a Student!
+                </button>
+            </div>
+        </div>
+        
+        <!-- -------------------- RESULT VIEW (Animation Page) -------------------- -->
+        <div id="resultView" class="hidden flex-col items-center min-h-[400px]">
+            <h2 id="resultStatus" class="text-3xl font-bold text-gray-700 mb-8">Shuffling Names...</h2>
+
+            <!-- Final Result Display -->
+            <div id="resultContainer" class="flex flex-col justify-center items-center h-[150px] mb-8">
+                <div id="resultCard" class="card">
+                    <span id="chosenName"></span>
+                </div>
+            </div>
+            
+            <button id="goBackButton" class="mt-8 text-lg px-6 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition duration-300 shadow-md hidden">
+                ← Go Back to List
+            </button>
+        </div>
+        
+    </div>
+
+    <footer class="mt-8 text-gray-500 text-sm text-center">
+        Powered by simple client-side JavaScript for GitHub Pages.
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const homeView = document.getElementById('homeView');
+            const resultView = document.getElementById('resultView');
+            const resultStatus = document.getElementById('resultStatus');
+            const nameInputBox = document.getElementById('nameInputBox');
+            const pickButton = document.getElementById('pickButton');
+            const clearAllButton = document.getElementById('clearAllButton');
+            const goBackButton = document.getElementById('goBackButton');
+            const chosenNameSpan = document.getElementById('chosenName');
+            const resultCard = document.getElementById('resultCard');
+            const tagContainer = document.getElementById('tagContainer');
+            
+            let currentStudentList = []; 
+            // Total time for the shuffle effect before reveal
+            const REVEAL_DELAY_MS = 3000; 
+            const SHUFFLE_INTERVAL_START = 50; 
+            let shuffleInterval;
+            
+            // --- VIEW MANAGEMENT ---
+            
+            function showView(viewId) {
+                if (viewId === 'homeView') {
+                    homeView.classList.remove('hidden');
+                    homeView.classList.add('flex');
+                    resultView.classList.add('hidden');
+                    resultView.classList.remove('flex');
+                    goBackButton.classList.add('hidden');
+                    // Reset status message on return
+                    resultCard.classList.remove('chosen-card');
+                    updateButtonState();
+                } else if (viewId === 'resultView') {
+                    homeView.classList.add('hidden');
+                    homeView.classList.remove('flex');
+                    resultView.classList.remove('hidden');
+                    resultView.classList.add('flex');
+                }
+            }
+            
+            // --- CONFETTI FUNCTION ---
+            function runConfetti() {
+                // Basic burst (upwards)
+                confetti({
+                    particleCount: 150,
+                    spread: 90,
+                    origin: { y: 0.6 }
+                });
+
+                // Small explosion (right side)
+                confetti({
+                    particleCount: 50,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 }
+                });
+
+                // Small explosion (left side)
+                confetti({
+                    particleCount: 50,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 }
+                });
+            }
+
+            // --- Core Logic Functions ---
+            
+            function updateButtonState() {
+                const isListReady = currentStudentList.length > 0;
+                pickButton.disabled = !isListReady;
+
+                if (!resultCard.classList.contains('chosen-card') && isListReady) {
+                    chosenNameSpan.textContent = "Ready to pick!";
+                } else if (!isListReady) {
+                    chosenNameSpan.textContent = "Waiting for List...";
+                }
+            }
+
+            function updateTagDisplay() {
+                tagContainer.innerHTML = '';
+                currentStudentList.forEach((name, index) => {
+                    const tag = document.createElement('div');
+                    tag.classList.add('name-tag');
+                    tag.dataset.name = name;
+                    
+                    tag.innerHTML = `
+                        <span>${name}</span>
+                        <span class="name-tag-remove" data-index="${index}">&times;</span>
+                    `;
+                    tagContainer.appendChild(tag);
+                });
+                updateButtonState();
+            }
+
+            function addName(name) {
+                name = name.trim();
+                if (name.length > 0 && !currentStudentList.includes(name)) {
+                    currentStudentList.push(name);
+                    currentStudentList.sort((a, b) => a.localeCompare(b)); 
+                    updateTagDisplay();
+                    resultCard.classList.remove('chosen-card');
+                }
+            }
+
+            function removeName(index) {
+                if (index >= 0 && index < currentStudentList.length) {
+                    currentStudentList.splice(index, 1);
+                    updateTagDisplay();
+                    resultCard.classList.remove('chosen-card');
+                }
+            }
+            
+            function clearAllParticipants() {
+                currentStudentList = []; 
+                nameInputBox.value = ''; 
+                updateTagDisplay(); 
+                resultCard.classList.remove('chosen-card'); 
+                chosenNameSpan.textContent = "Waiting for List..."; 
+                updateButtonState();
+            }
+
+            // --- Shuffle Logic ---
+            
+            const startVisualShuffle = (names) => {
+                const randomIndex = Math.floor(Math.random() * names.length);
+                chosenNameSpan.textContent = names[randomIndex];
+            };
+
+            const runShuffleWithSlowdown = (names) => {
+                let currentInterval = SHUFFLE_INTERVAL_START;
+                
+                // 1. Start fast shuffle
+                shuffleInterval = setInterval(() => startVisualShuffle(names), currentInterval);
+
+                // 2. Slow down phase 1 (after 1 second)
+                setTimeout(() => {
+                    clearInterval(shuffleInterval);
+                    currentInterval = 150; 
+                    shuffleInterval = setInterval(() => startVisualShuffle(names), currentInterval);
+                }, 1000); 
+
+                // 3. Slow down phase 2 (after 2 seconds)
+                setTimeout(() => {
+                    clearInterval(shuffleInterval);
+                    currentInterval = 400; 
+                    shuffleInterval = setInterval(() => startVisualShuffle(names), currentInterval);
+                }, 2000);
+            };
+
+            // --- Event Handlers ---
+            
+            nameInputBox.addEventListener('paste', (event) => {
+                event.preventDefault();
+                const pastedText = (event.clipboardData || window.clipboardData).getData('text');
+                let finalNames = [];
+                const lines = pastedText.split(/\r?\n|\r/); 
+                
+                lines.forEach(line => {
+                    line.split(',').forEach(name => {
+                        const trimmedName = name.trim();
+                        if (trimmedName.length > 0) {
+                            finalNames.push(trimmedName);
+                        }
+                    });
+                });
+                finalNames.forEach(addName);
+                nameInputBox.value = ''; 
+                nameInputBox.focus();
+            });
+
+            nameInputBox.addEventListener('keyup', (event) => {
+                if (event.key === 'Enter' || event.key === ',') {
+                    event.preventDefault();
+                    const value = nameInputBox.value;
+                    const names = value.split(',').map(n => n.trim()).filter(n => n.length > 0);
+                    names.forEach(addName);
+                    nameInputBox.value = '';
+                    nameInputBox.focus();
+                }
+            });
+
+            tagContainer.addEventListener('click', (event) => {
+                if (event.target.classList.contains('name-tag-remove')) {
+                    const index = parseInt(event.target.dataset.index);
+                    removeName(index);
+                }
+            });
+
+            // 1. Picking button logic: Transition to result view and start selection
+            pickButton.addEventListener('click', () => {
+                const names = currentStudentList;
+                
+                if (names.length === 0) {
+                    return; 
+                }
+
+                showView('resultView'); // Switch to result page
+                
+                // Reset status and card state
+                resultStatus.textContent = "Shuffling Names...";
+                resultCard.classList.remove('chosen-card');
+                goBackButton.classList.add('hidden');
+                pickButton.disabled = true;
+                
+                // Start the visual shuffle with dramatic slowdown
+                runShuffleWithSlowdown(names);
+
+
+                setTimeout(() => {
+                    // --- STOP SHUFFLE EFFECT AND REVEAL ---
+                    clearInterval(shuffleInterval); // Stop the shuffling effect
+                    
+                    // 1. Select Name
+                    const randomIndex = Math.floor(Math.random() * names.length);
+                    const chosenName = names[randomIndex];
+                    
+                    // 2. Display Result with Reveal Animation (and keep it!)
+                    resultStatus.textContent = "🥳 The Chosen Student Is... 🥳";
+                    chosenNameSpan.textContent = chosenName;
+                    resultCard.classList.add('chosen-card');
+                    
+                    // 3. Trigger Confetti!
+                    runConfetti();
+
+                    // 4. Show the go back button and re-enable picking
+                    setTimeout(() => {
+                        goBackButton.classList.remove('hidden');
+                        pickButton.disabled = false;
+                    }, 500); // Small delay after reveal animation completes
+                    
+                }, REVEAL_DELAY_MS); 
+            });
+
+            // 2. Clear All button listener
+            clearAllButton.addEventListener('click', clearAllParticipants);
+            
+            // 3. Go Back button listener
+            goBackButton.addEventListener('click', () => {
+                showView('homeView');
+            });
+
+            // Initial setup
+            showView('homeView');
+        });
+    </script>
+</body>
+</html>
