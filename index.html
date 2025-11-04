@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Random Student Picker</title>
+    <title>符老师幸运抽奖系统</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Load Confetti Library -->
@@ -74,13 +74,13 @@
     <!-- Main Application Container -->
     <div id="appContainer" class="w-full max-w-xl bg-white p-6 md:p-8 rounded-xl shadow-2xl border border-gray-200">
         <h1 class="4xl font-extrabold text-blue-600 text-center mb-6">
-            ✨ Student Selector
+            ✨ 幸运抽奖系统
         </h1>
 
         <!-- -------------------- HOME VIEW (Input Page) -------------------- -->
         <div id="homeView" class="flex flex-col">
             <div class="space-y-4 mb-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <h2 class="text-2xl font-semibold text-blue-800">1. List of Participants</h2>
+                <h2 class="text-2xl font-semibold text-blue-800">名单</h2>
                 
                 <!-- Container for dynamic tags -->
                 <div id="tagContainer" class="flex flex-wrap gap-2 p-2 min-h-[40px] border border-gray-300 rounded-lg bg-white">
@@ -90,12 +90,12 @@
                 <!-- Input field for adding names -->
                 <input type="text" id="nameInputBox" 
                        class="w-full p-3 border-2 border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-base" 
-                       placeholder="Type names and press Enter, or paste a list...">
+                       placeholder="Type names and press Enter, 或复制贴上名单...">
                        
                 <!-- Clear Button Container -->
                 <div class="flex justify-end">
                     <button id="clearAllButton" class="text-sm px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-300 shadow-md">
-                        Clear All Participants
+                        清空名单
                     </button>
                 </div>
             </div>
@@ -104,14 +104,14 @@
             <div class="text-center mb-4">
                 <button id="pickButton" disabled 
                         class="bg-yellow-400 text-gray-800 font-extrabold py-4 px-10 text-2xl rounded-full transition duration-300 transform hover:scale-105 shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none">
-                    Pick a Student!
+                    开始抽奖！
                 </button>
             </div>
         </div>
         
         <!-- -------------------- RESULT VIEW (Animation Page) -------------------- -->
         <div id="resultView" class="hidden flex-col items-center min-h-[400px]">
-            <h2 id="resultStatus" class="text-3xl font-bold text-gray-700 mb-8">Shuffling Names...</h2>
+            <h2 id="resultStatus" class="text-3xl font-bold text-gray-700 mb-8">抽奖进行中...</h2>
 
             <!-- Final Result Display -->
             <div id="resultContainer" class="flex flex-col justify-center items-center h-[150px] mb-8">
@@ -121,14 +121,14 @@
             </div>
             
             <button id="goBackButton" class="mt-8 text-lg px-6 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition duration-300 shadow-md hidden">
-                ← Go Back to List
+                ← 返回
             </button>
         </div>
         
     </div>
 
     <footer class="mt-8 text-gray-500 text-sm text-center">
-        Powered by simple client-side JavaScript for GitHub Pages.
+        Created by 符老师.
     </footer>
 
     <script>
