@@ -330,7 +330,7 @@
                 showView('resultView'); // Switch to result page
                 
                 // Reset status and card state
-                resultStatus.textContent = "Shuffling Names...";
+                resultStatus.textContent = "抽奖进行中...";
                 resultCard.classList.remove('chosen-card');
                 goBackButton.classList.add('hidden');
                 pickButton.disabled = true;
@@ -348,7 +348,7 @@
                     const chosenName = names[randomIndex];
                     
                     // 2. Display Result with Reveal Animation (and keep it!)
-                    resultStatus.textContent = "🥳 The Chosen Student Is... 🥳";
+                    resultStatus.textContent = "🥳 得奖的是... 🥳";
                     chosenNameSpan.textContent = chosenName;
                     resultCard.classList.add('chosen-card');
                     
